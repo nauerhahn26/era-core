@@ -1,0 +1,98 @@
+{
+  "sizes": {
+    "fontFloor": 74,
+    "fontMin": 44,
+    "fontCap": 112,
+    "gapFloor": 28,
+    "gapWarn": 34,
+    "sidePadBoard": 40,
+    "sidePadMakingWords": 60,
+    "vPad": 20,
+    "barH": 140,
+    "gapFrac": 0.22,
+    "trayBand": 0.3,
+    "parkUnits": 0.55,
+    "photoLabelShare": 0.2,
+    "photoPlateMin": 52,
+    "photoFontCap": 46,
+    "photoFontMin": 24
+  },
+  "holds": {
+    "supportRead": 1000,
+    "content": 1200,
+    "navBonus": 400,
+    "navMin": 1600,
+    "answer": 1600,
+    "backspace": 1800,
+    "clear": 2000,
+    "send": 2200,
+    "exit": 2400,
+    "floor": 800,
+    "tuneMax": 3000,
+    "boardRuntimeMin": 600
+  },
+  "maxChoices": {
+    "ideal": 2,
+    "comfortable": 12,
+    "cap": 16
+  },
+  "parkCorner": {
+    "x01": 0.995,
+    "y01": 0.995,
+    "inert": true
+  },
+  "parkOverride": {
+    "endpoint": "http://127.0.0.1:49155/app/park",
+    "persisted": false
+  },
+  "prediction": {
+    "slots": 3,
+    "singlePaintMs": 250,
+    "midWordLead": "local-phonetic",
+    "nextWordLead": "server",
+    "holdMs": 2000
+  },
+  "navAnchors": {
+    "more": "bottom-left",
+    "exit": "bottom-right",
+    "boardDoor": "top-left",
+    "back": "top-left",
+    "restCells": "center"
+  },
+  "dwellEngine": {
+    "ms": 1200,
+    "graceMs": 400,
+    "decayMs": 1000,
+    "padPx": 16,
+    "rearmPx": 48,
+    "staleMs": 600,
+    "settleMs": 250,
+    "chime": false,
+    "audioPreview": false,
+    "gazeBus": "ws://127.0.0.1:49155"
+  },
+  "speech": {
+    "bargeIn": "stop-before-say",
+    "serialization": "sentence-waits-for-letter-echo"
+  },
+  "devices": [
+    {
+      "w": 1920,
+      "h": 1080
+    },
+    {
+      "w": 2736,
+      "h": 1824
+    }
+  ],
+  "gateViewports": [
+    {
+      "w": 1920,
+      "h": 1080
+    },
+    {
+      "w": 1280,
+      "h": 720
+    }
+  ]
+}

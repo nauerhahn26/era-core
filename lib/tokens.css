@@ -1,0 +1,104 @@
+/*
+ * tokens.css — two-tier design tokens (primitive -> semantic) for Ellie's
+ * eye-gaze apps.  PLAIN CSS custom properties, no build step.
+ *
+ * SPEC: values mirror /home/claude/aac-board-builder/knowledge/ux-contract.md
+ * (§C numeric contract + §27 palette).  CHANGE THE DOC FIRST, then this file,
+ * then lib/contract.js — the three must stay 1:1.  Whitelist principle: if a
+ * size/hold/color is not in the contract, do not invent it here.
+ *
+ * Not yet imported by any app (Phase 3 migrates apps onto these). Timing lives
+ * here as custom properties so holds are readable from CSS *and* JS.
+ */
+
+:root {
+  /* ============================================================= *
+   * TIER 1 — PRIMITIVES  (raw palette + raw scales; no meaning)   *
+   * ============================================================= */
+
+  /* -- color primitives (ux-contract §27, board-render.js:44) -- */
+  --c-ink:            #17272E;  /* dark ink / dark-tile text */
+  --c-paper:          #F7F9F8;  /* page background */
+  --c-teal:           #0F7C8A;  /* brand teal = dwell fill + control tiles */
+  --c-vowel:          #DE7B52;  /* vowel accent (orange) */
+  --c-good-literacy:  #2E7D5B;  /* literacy success green (--good) */
+  --c-good-board:     #2E9E4B;  /* board "yes" tile green.  NOTE: two greens
+                                   live (§E-7). Pending a palette-unification
+                                   pass; until then each surface keeps its own. */
+  --c-grey:           #6B7B82;  /* category / back / more tiles */
+  --c-black:          #000000;  /* rest cells + park pad (inert) */
+  --c-white:          #FFFFFF;  /* light tiles (outfit/clothing/word) */
+  --c-partner-red:    #B23A48;  /* PARTNER-ONLY warnings — never in her path */
+  --c-confetti-gold:  #B7822B;  /* 4th confetti color (studio.js:1127) */
+
+  /* -- size primitives (px; ux-contract §C) -- */
+  --px-font-floor:   74px;   /* text-tile target floor (=32pt @166ppi) */
+  --px-font-min:     44px;   /* absolute min, fit-impossible label only */
+  --px-font-cap:    112px;   /* upper clamp */
+  --px-gap-floor:    28px;   /* grid gap floor (pixel gate warns <34) */
+  --px-side-board:   40px;   /* board renderer side pad (<=48) */
+  --px-side-mkwords: 60px;   /* Making Words tray side pad */
+  --px-vpad:         20px;   /* board vertical pad */
+  --px-bar-h:       140px;   /* reserved message-bar height (zero layout shift) */
+  --px-photo-plate-min: 52px;
+  --px-photo-font-cap:  46px;
+  --px-photo-font-min:  24px;
+
+  /* -- timing primitives (ms; ux-contract §C hold ladder) -- */
+  --ms-support-read: 1000ms; /* support "look = hear", not a commit */
+  --ms-content:      1200ms; /* default content-tile hold */
+  --ms-door-min:     1600ms; /* nav-DOOR floor */
+  --ms-door-bonus:    400ms; /* added to content hold before the door floor */
+  --ms-answer:       1600ms; /* answer / word / Speak */
+  --ms-backspace:    1800ms;
+  --ms-clear:        2000ms; /* clear-all / prediction */
+  --ms-send:         2200ms;
+  --ms-exit:         2400ms; /* round-trip exit door */
+  --ms-floor:         800ms; /* committing-action hold floor (apps) */
+  --ms-dwell:        1200ms; /* engine default dwell (dwell.js:46) */
+  --ms-grace:         400ms; /* look-away grace (dwell.js:46) */
+  --ms-decay:        1000ms; /* full->empty decay after grace (dwell.js:46) */
+
+  /* ============================================================= *
+   * TIER 2 — SEMANTIC  (roles map onto primitives; apps use these)*
+   * ============================================================= */
+
+  /* -- semantic colors -- */
+  --color-ink:          var(--c-ink);
+  --color-paper:        var(--c-paper);
+  --color-primary:      var(--c-teal);      /* dwell fill + controls */
+  --color-dwell-fill:   var(--c-teal);
+  --color-vowel:        var(--c-vowel);
+  --color-success:      var(--c-good-literacy); /* literacy default success */
+  --color-success-board:var(--c-good-board);    /* board yes tile (see §E-7) */
+  --color-nav:          var(--c-grey);      /* category/back/more */
+  --color-rest:         var(--c-black);     /* rest cells + park pad */
+  --color-tile-light:   var(--c-white);
+  --color-warn-partner: var(--c-partner-red);
+
+  /* -- semantic sizes -- */
+  --font-floor:  var(--px-font-floor);
+  --font-min:    var(--px-font-min);
+  --font-cap:    var(--px-font-cap);
+  --gap-floor:   var(--px-gap-floor);
+  --side-pad:    var(--px-side-board);   /* default; Making Words overrides w/ --px-side-mkwords */
+  --v-pad:       var(--px-vpad);
+  --bar-h:       var(--px-bar-h);
+
+  /* -- semantic holds (the ladder, ascending by consequence) -- */
+  --hold-support-read: var(--ms-support-read);
+  --hold-content:      var(--ms-content);
+  --hold-door-min:     var(--ms-door-min);
+  --hold-door-bonus:   var(--ms-door-bonus); /* door = max(content+bonus, door-min) */
+  --hold-answer:       var(--ms-answer);
+  --hold-backspace:    var(--ms-backspace);
+  --hold-clear:        var(--ms-clear);
+  --hold-send:         var(--ms-send);
+  --hold-exit:         var(--ms-exit);
+  --hold-floor:        var(--ms-floor);
+
+  /* -- semantic dwell engine -- */
+  --dwell-ms:    var(--ms-dwell);
+  --dwell-grace: var(--ms-grace);
+  --dwell-decay: var(--ms-decay);
+}

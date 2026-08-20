@@ -1,0 +1,15 @@
+New ERA Communications — era-core
+Copyright (c) 2026 the New ERA Communications authors.
+Licensed under the Mozilla Public License 2.0 (see LICENSE).
+
+Interoperability attribution: the gaze-bus WebSocket message shape consumed by
+dwell.js ({gazePoint:{x,y}, validity, timestamp} on a localhost port, plus a
+GET /status endpoint) was adopted for interoperability from Aivota AAC's gaze
+sidecar contract, with the developer's knowledge from a July 2026
+collaboration. The implementation here is entirely independent. The post-fire
+reactivation-anchor behavior in dwell.js was likewise inspired by Aivota (and
+is credited in-source); the mechanism differs.
+
+dwell.js's smoothing/selection model draws on published prior art including the
+One-Euro filter (Casiez, Roussel, Vogel 2012) and dwell-selection patterns from
+the open-source OptiKey project.
