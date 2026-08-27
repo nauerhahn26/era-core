@@ -42,9 +42,10 @@
     clipCache.set(text, url);
     return url;
   }
-  function playClip(url, text, kind) {
+  function playClip(url, text, kind, muted) {
     return new Promise(res => {
       const a = new Audio(url);
+      if (muted) a.muted = true;
       current = a; currentKind = kind;
       let done = false; const fin = ok => { if (!done) { done = true; res(ok); } };
       a.onended = () => fin(true);
@@ -53,8 +54,8 @@
       setTimeout(() => fin(true), Math.min(14000, 1500 + text.length * 95));
     });
   }
-  async function sayEleven(text, kind) {
-    try { return await playClip(await fetchClip(text), text, kind); }
+  async function sayEleven(text, kind, muted) {
+    try { return await playClip(await fetchClip(text), text, kind, muted); }
     catch { return false; }
   }
   function sayLocal(text, kind) {
@@ -75,18 +76,22 @@
     try { if (window.speechSynthesis && speechSynthesis.speaking) speechSynthesis.cancel(); } catch {}
   }
 
+  // The boot self-test is SILENT: it exercises the full audio path (fetch +
+  // playback / utterance start) to pick the mode and drive the ttsWarn banner,
+  // but no app announces itself out loud at launch (dad 8/27).
   async function init(sample) {
     if (window.__testHooks) { mode = "test"; return mode; }  // deterministic fake audio
     try {
       const v = await (await fetch("/voices")).json();
-      if (v.enabled && await sayEleven(sample || "Hello!", "long")) { mode = "eleven"; return mode; }
+      if (v.enabled && await sayEleven(sample || "Hello!", "long", true)) { mode = "eleven"; return mode; }
     } catch {}
-    // local self-test: does an utterance actually start?
+    // local self-test: does an utterance actually start? (volume 0 — inaudible)
     const started = await new Promise(res => {
       if (!window.speechSynthesis) return res(false);
       let ok = false;
       const u = new SpeechSynthesisUtterance(sample || "Hello!");
       if (localVoice) u.voice = localVoice;
+      u.volume = 0;
       u.onstart = () => { ok = true; };
       u.onend = () => res(ok); u.onerror = () => res(false);
       speechSynthesis.speak(u);
