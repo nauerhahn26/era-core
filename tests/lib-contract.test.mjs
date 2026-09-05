@@ -12,8 +12,14 @@ import { CONTRACT, holdFor, holdForDoor, assertContract } from "../public/lib/co
 
 // ---- the ux-contract §C table, hardcoded (the source of truth for this test) ----
 const EXPECTED_SIZES = {
-  fontFloor: 74, fontMin: 44, fontCap: 112, gapFloor: 28, gapWarn: 34,
-  sidePadBoard: 40, sidePadMakingWords: 60, vPad: 20, barH: 124,  // 140 ate the grid on a 13" 1080p board; 110 is the slimmest
+  fontFloor: 74, fontMin: 44, fontCap: 112,
+  gapFloor: 14, gapWarn: 14,        // §24 AMENDED 9/5: Ellie's own tablet's gap (~1% of screen
+                                    // width) — dad "you put too much spacing between the tiles".
+                                    // gapWarn == gapFloor: the warn band is retired, because the
+                                    // board draws exactly the floor and a higher warn would fire
+                                    // on every pair on every page.
+  sidePadBoard: 28, vPad: 12,       // §24 measured off her tablet's photo (dad 9/5)
+  sidePadMakingWords: 60, barH: 124,  // 140 ate the grid on a 13" 1080p board; 110 is the slimmest
                                     // bar that keeps the exit door >= the 90px target floor (dad 9/1)
   gapFrac: 0.22, trayBand: 0.30, parkUnits: 0.55,
   photoLabelShare: 0.20, photoPlateMin: 52, photoFontCap: 46, photoFontMin: 24,
