@@ -20,13 +20,6 @@
   "holds": {
     "supportRead": 1000,
     "content": 1200,
-    "navBonus": 400,
-    "navMin": 1600,
-    "answer": 1600,
-    "backspace": 1800,
-    "clear": 2000,
-    "send": 2200,
-    "exit": 2400,
     "floor": 800,
     "tuneMax": 3000,
     "boardRuntimeMin": 600
