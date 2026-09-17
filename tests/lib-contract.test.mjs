@@ -8,7 +8,21 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { CONTRACT, holdFor, holdForDoor, assertContract } from "../public/lib/contract.js";
+
+// This suite runs from two places — the gate's assembled layout (era-hub/gate/,
+// where ../public/lib is a symlink to era-core/lib) and, in place, the era-core
+// worktree's own tests/ dir. Try both (board-pixel.test.mjs:23 idiom).
+const LIB = await (async () => {
+  for (const p of ["../public/lib/", "../lib/"]) {
+    try { await import(new URL(p + "contract.js", import.meta.url)); return new URL(p, import.meta.url); }
+    // only "no file at this path" means try the other layout — a syntax error
+    // inside contract.js must surface as itself, not as "not found".
+    catch (err) { if (err?.code !== "ERR_MODULE_NOT_FOUND") throw err; }
+  }
+  throw new Error("lib/contract.js not found from " + import.meta.url);
+})();
+const { CONTRACT, holdFor, holdForExit, assertContract } =
+  await import(new URL("contract.js", LIB));
 
 // ---- the ux-contract §C table, hardcoded (the source of truth for this test) ----
 const EXPECTED_SIZES = {
@@ -24,19 +38,31 @@ const EXPECTED_SIZES = {
   gapFrac: 0.22, trayBand: 0.30, parkUnits: 0.55,
   photoLabelShare: 0.20, photoPlateMin: 52, photoFontCap: 46, photoFontMin: 24,
 };
+// Two speeds since dad's 9/17 ruling (§C): everything holds `dwell`, the two
+// doors that leave the screen hold 2x it. The invented content<nav<answer<
+// backspace<clear<send<exit rungs are GONE from the whitelist on purpose.
 const EXPECTED_HOLDS = {
-  supportRead: 1000, content: 1200, navBonus: 400, navMin: 1600, answer: 1600,
-  backspace: 1800, clear: 2000, send: 2200, exit: 2400, floor: 800,
-  tuneMax: 3000, boardRuntimeMin: 600,
+  supportRead: 1000, content: 1200, floor: 800, tuneMax: 3000, boardRuntimeMin: 600,
 };
+// Rungs removed 9/17 — a rung nobody may use must not exist to be reached for.
+const REMOVED_HOLDS = ["navBonus", "navMin", "answer", "backspace", "clear",
+                       "send", "exit", "holdForDoor"];
 const EXPECTED_DWELL = { ms: 1200, graceMs: 400, decayMs: 1000, padPx: 16, rearmPx: 48, staleMs: 600 };
 
 test("sizes match ux-contract §C", () => {
   for (const [k, v] of Object.entries(EXPECTED_SIZES)) assert.equal(CONTRACT.sizes[k], v, k);
 });
 
-test("holds ladder matches ux-contract §C/§D", () => {
+test("holds set matches ux-contract §C/§D", () => {
   for (const [k, v] of Object.entries(EXPECTED_HOLDS)) assert.equal(CONTRACT.holds[k], v, k);
+});
+
+test("the removed rungs are gone (whitelist: no rung to reach for) — dad 9/17", () => {
+  for (const k of REMOVED_HOLDS) assert.equal(CONTRACT.holds[k], undefined, k);
+  assert.deepEqual(
+    Object.keys(CONTRACT.holds).sort(),
+    ["boardRuntimeMin", "content", "floor", "holdForExit", "supportRead", "tuneMax"],
+    "holds carries exactly the five numbers plus holdForExit");
 });
 
 test("dwell engine defaults match ux-contract §C (staleMs=600 per §E-5 Gate-2 ruling)", () => {
@@ -57,18 +83,29 @@ test("maxChoices, park corner, nav anchors, speech, devices", () => {
   assert.deepEqual(CONTRACT.devices, [{ w: 1920, h: 1080 }, { w: 2736, h: 1824 }]);
 });
 
-test("door rule: holdForDoor(1200)===1600 && holdForDoor(1400)===1800", () => {
-  assert.equal(holdForDoor(1200), 1600); // content+400=1600 == floor
-  assert.equal(holdForDoor(1400), 1800); // content+400=1800 > floor
-  assert.equal(CONTRACT.holds.holdForDoor(1200), 1600); // same fn on the contract
+test("exit rule (dad 9/17): holdForExit(dwell) === 2 * dwell", () => {
+  assert.equal(holdForExit(1200), 2400); // today's Settings default — nothing she learned moves
+  assert.equal(holdForExit(600), 1200);  // the fastest she can be set to
+  assert.equal(holdForExit(3000), 6000); // the slowest
+  assert.equal(CONTRACT.holds.holdForExit(1200), 2400); // same fn on the contract
 });
 
-test("holdFor(type) maps roles to the ladder", () => {
-  assert.equal(holdFor("content"), 1200);
-  assert.equal(holdFor("word"), 1600);
-  assert.equal(holdFor("clear"), 2000);
-  assert.equal(holdFor("exit"), 2400);
-  assert.equal(holdFor("nonsense"), 1200); // unknown -> content fallback
+test("holdFor(role, dwell): two speeds, everything else is dwell", () => {
+  assert.equal(holdFor("content", 900), 900);
+  assert.equal(holdFor("word", 900), 900);
+  assert.equal(holdFor("clear", 900), 900);
+  assert.equal(holdFor("backspace", 900), 900);
+  assert.equal(holdFor("send", 900), 900);
+  assert.equal(holdFor("nonsense", 900), 900);        // unknown role = a control = dwell
+  assert.equal(holdFor("exit", 900), 1800);           // the door: 2 x dwell
+  assert.equal(holdFor("exit", 1200), 2400);
+  assert.equal(holdFor("talk", 1200), 2400);          // 💬 is the other door
+  assert.equal(holdFor("supportRead", 900), 1000);    // reading, not selecting
+  assert.equal(holdFor("prediction", 900), 2000);     // reading three, not picking one
+  assert.equal(holdFor("content"), 1200);             // no dwell given -> contract default
+  assert.equal(holdFor("exit"), 2400);                // ... and the door is still 2x it
+  assert.equal(holdFor("send", "nope"), 1200);        // garbage dwell -> content fallback
+  assert.equal(holdFor("exit", NaN), 2400);
 });
 
 test("assertContract is a no-op placeholder returning its arg", () => {
@@ -87,7 +124,7 @@ test("CONTRACT is deep-frozen (whitelist cannot mutate)", () => {
 });
 
 test("contract.json is in sync with contract.js (regenerate via tools/gen-contract-json.mjs)", () => {
-  const jsonPath = fileURLToPath(new URL("../public/lib/contract.json", import.meta.url));
+  const jsonPath = fileURLToPath(new URL("contract.json", LIB));
   const onDisk = readFileSync(jsonPath, "utf8");
   const expected = JSON.stringify(CONTRACT, null, 2) + "\n"; // JSON drops fn-valued keys
   assert.equal(onDisk, expected, "contract.json stale — run: node tools/gen-contract-json.mjs");
