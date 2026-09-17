@@ -35,25 +35,31 @@
   --px-font-floor:   74px;   /* text-tile target floor (=32pt @166ppi) */
   --px-font-min:     44px;   /* absolute min, fit-impossible label only */
   --px-font-cap:    112px;   /* upper clamp */
-  --px-gap-floor:    28px;   /* grid gap floor (pixel gate warns <34) */
-  --px-side-board:   40px;   /* board renderer side pad (<=48) */
+  /* the four below drifted from contract.js and were re-mirrored 9/17: gap 28->14,
+     side 40->28, vpad 20->12 (dad 9/5, measured off Ellie's own tablet) and
+     barH 140->124 (dad 9/1, "the header is too large"). */
+  --px-gap-floor:    14px;   /* grid gap floor (contract sizes.gapFloor) */
+  --px-side-board:   28px;   /* board renderer side pad (contract sizes.sidePadBoard) */
   --px-side-mkwords: 60px;   /* Making Words tray side pad */
-  --px-vpad:         20px;   /* board vertical pad */
-  --px-bar-h:       140px;   /* reserved message-bar height (zero layout shift) */
+  --px-vpad:         12px;   /* board vertical pad (contract sizes.vPad) */
+  --px-bar-h:       124px;   /* RESERVED message-bar height = the ceiling only (contract sizes.barH) */
   --px-photo-plate-min: 52px;
   --px-photo-font-cap:  46px;
   --px-photo-font-min:  24px;
 
-  /* -- timing primitives (ms; ux-contract §C hold ladder) -- */
+  /* -- timing primitives (ms; ux-contract §C holds) --
+     AMENDED 9/17 (dad's ruling, ux-contract §C; lib/contract.js commit 2b8f326):
+     the invented content < nav < answer < backspace < clear < send < exit ladder
+     is GONE — `--ms-door-min`, `--ms-door-bonus`, `--ms-answer`, `--ms-backspace`,
+     `--ms-clear`, `--ms-send` and `--ms-exit` were REMOVED here to keep the 1:1
+     mirror with contract.js, which removed the same rungs. Two speeds now: the
+     two doors that leave the screen (🚪 / 💬) hold 2 x HER dwell via
+     holdForExit(), everything else holds her dwell exactly. There is deliberately
+     NO token for either: both are her Settings value, read at runtime, and a CSS
+     custom property cannot express "her dwell". --ms-dwell below is only the
+     engine's DEFAULT, never the authority. */
   --ms-support-read: 1000ms; /* support "look = hear", not a commit */
   --ms-content:      1200ms; /* default content-tile hold */
-  --ms-door-min:     1600ms; /* nav-DOOR floor */
-  --ms-door-bonus:    400ms; /* added to content hold before the door floor */
-  --ms-answer:       1600ms; /* answer / word / Speak */
-  --ms-backspace:    1800ms;
-  --ms-clear:        2000ms; /* clear-all / prediction */
-  --ms-send:         2200ms;
-  --ms-exit:         2400ms; /* round-trip exit door */
   --ms-floor:         800ms; /* committing-action hold floor (apps) */
   --ms-dwell:        1200ms; /* engine default dwell (dwell.js:46) */
   --ms-grace:         400ms; /* look-away grace (dwell.js:46) */
@@ -83,18 +89,15 @@
   --gap-floor:   var(--px-gap-floor);
   --side-pad:    var(--px-side-board);   /* default; Making Words overrides w/ --px-side-mkwords */
   --v-pad:       var(--px-vpad);
-  --bar-h:       var(--px-bar-h);
+  /* no --bar-h alias here: doorbar.js's sizeBar() publishes the LIVE strip height
+     on the mount, and a :root copy would silently win outside it. */
 
-  /* -- semantic holds (the ladder, ascending by consequence) -- */
+  /* -- semantic holds (9/17: two speeds, not a ladder) --
+     `--hold-door-min`, `--hold-door-bonus`, `--hold-answer`, `--hold-backspace`,
+     `--hold-clear`, `--hold-send` and `--hold-exit` went with their primitives
+     above: they aliased rungs that no longer exist. */
   --hold-support-read: var(--ms-support-read);
   --hold-content:      var(--ms-content);
-  --hold-door-min:     var(--ms-door-min);
-  --hold-door-bonus:   var(--ms-door-bonus); /* door = max(content+bonus, door-min) */
-  --hold-answer:       var(--ms-answer);
-  --hold-backspace:    var(--ms-backspace);
-  --hold-clear:        var(--ms-clear);
-  --hold-send:         var(--ms-send);
-  --hold-exit:         var(--ms-exit);
   --hold-floor:        var(--ms-floor);
 
   /* -- semantic dwell engine -- */
