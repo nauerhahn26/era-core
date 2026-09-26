@@ -1,7 +1,7 @@
 /*
  * dwell.js v2 — hover-to-activate for eye-gaze web apps, tuned for Rett syndrome.
  *
- * The gaze layer (RaeGaze) only moves the cursor and shows where she's looking.
+ * The gaze layer (ERAgaze) only moves the cursor and shows where she's looking.
  * ACTIVATION lives here, per element, so nothing fires just because her gaze
  * passes over it — only elements that opt in, each with its own hold time.
  *
@@ -15,7 +15,7 @@
  *   - LOOK-AWAY FORGIVENESS: leaving a target PAUSES progress; within graceMs it
  *     resumes where it was, then decays gently instead of hard-resetting (OptiKey
  *     model). A brief glance away no longer punishes her.
- *   - GAZE BUS: connects to RaeGaze at ws://127.0.0.1:49155. When the tracker
+ *   - GAZE BUS: connects to ERAgaze at ws://127.0.0.1:49155. When the tracker
  *     reports invalid/stale (blink, look-away, head turn), dwell PAUSES — a frozen
  *     cursor can never complete a selection. (This was the false-activation bug.)
  *   - AUDITORY PREVIEW: speaks the target's label when dwell starts (recommended in
