@@ -1,6 +1,6 @@
 # era-core
 
-The shared foundation of the **New ERA Communications** eye-gaze app family:
+The shared foundation of the **Our Era Communication Tools** eye-gaze app family:
 
 - `dwell.js` — the dwell/selection engine: sustain-to-select with look-away grace
   and gentle decay, hysteresis halo, track-loss hold, tap parity (touch works
@@ -14,8 +14,8 @@ The shared foundation of the **New ERA Communications** eye-gaze app family:
   app shell, celebration effects.
 
 These engines are safety-critical for eye-gaze users: apps consume them, never
-fork them. Versioned releases; each New ERA app pins the version it has tested
-against.
+fork them. Versioned releases; each Our Era Comms app pins the version it has
+tested against.
 
 Built for Ellie, a six-year-old who communicates by eye gaze; shared so any
 family can use it. License: MPL-2.0 (see LICENSE, NOTICE).

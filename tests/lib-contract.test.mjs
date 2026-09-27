@@ -139,12 +139,8 @@ const GAZE = process.env.ERA_GAZE_SRC ||
   join(dirname(fileURLToPath(import.meta.url)), "..", "..", "era-gaze");
 import { existsSync } from "node:fs";
 const HAS_GAZE = existsSync(join(GAZE, "device", "ERAgaze.cs"));
-const HAS_TWIN = existsSync(join(GAZE, "RaeGaze.cs"));
-
-test("ERAgaze.cs and RaeGaze.cs are byte-identical twins (no silent drift)", { skip: !HAS_TWIN }, () => {
-  const a = readFileSync(join(GAZE, "device", "ERAgaze.cs"), "utf8");
-  const b = readFileSync(join(GAZE, "RaeGaze.cs"), "utf8");
-  assert.equal(a, b, "packages/gaze/RaeGaze.cs must exactly equal packages/gaze/device/ERAgaze.cs — edit device/, copy over");
+test("the gaze engine source is device/ERAgaze.cs (the old twin is gone)", { skip: !existsSync(GAZE) }, () => {
+  assert.ok(HAS_GAZE, "era-gaze checkout at " + GAZE + " has no device/ERAgaze.cs");
 });
 
 test("ERAgaze constants mirror the contract (park corner, bus port)", { skip: !HAS_GAZE }, () => {
