@@ -1,0 +1,76 @@
+/*
+ * doorbar.css — the shared message bar (lib/doorbar.js), for ALL FIVE apps.
+ *
+ * Moved verbatim out of era-board's app/board.css (:20-44 and the .bardoor half
+ * of the dwell-onset block at :353-368) on 9/17 so the Board, the Book Reader,
+ * Making Words and the Pencil wear ONE bar with the same learned geometry.
+ * The board's own copies of these rules go away in the same feature (T5).
+ *
+ * Every color falls back to its literal: era-board defines --bar-bg/--bar-ink/
+ * --teal-deep/--font on :root in board.css, but the literacy apps link
+ * lib/tokens.css, which names no bar tokens — the bar must look the same on a
+ * page that defines nothing.
+ */
+
+/* ---- message bar: a SLIM strip, doors only (dad 9/2) ----
+   "Get rid of speak/clear we aren't using it. The header is still too big. The
+   icon for the exit can be smaller. Items in the top corners are more easily
+   accessible." — so Speak, Clear and the chips strip that fed them are gone and
+   the bar is at most 9% of the viewport (doorbar.js barHeight()), which hands
+   the rest of the screen to the app. Height is set inline per render. */
+/* the deeper BOTTOM padding is load-bearing: the door fills the strip, so with
+   even padding it sat 27px from the first tile — under the mishit floor the
+   gates enforce at the time (28px; pixel gate, 9/2). The floor came down to 14
+   on 9/5 with dad's tighter tablet spacing, but the extra bottom padding stays:
+   it is the door's own breathing room against the first row, not the grid gap. */
+/* position:relative is new (9/17): the 💬 talk door is ABSOLUTELY CENTRED in
+   the bar, so the bar is its containing block. */
+/* box-sizing is stated here, not inherited from the app: board.css has a global
+   `*{box-sizing:border-box}` and the literacy apps do not, and sizeBar() derives
+   the doors' height by subtracting the bar's padding+border from barHeight() —
+   under content-box the same strip would be 83px tall and the 💬 would sit 18px
+   short of the 🚪 (caught by the 1280x720 layout test, 9/17). */
+.msgbar,.bardoor{box-sizing:border-box}
+.msgbar{flex:0 0 auto; width:100%; display:flex; align-items:stretch; position:relative;
+        gap:0; padding:6px 12px 10px; background:var(--bar-bg, #0B4E58); color:var(--bar-ink, #FFFFFF);
+        border-bottom:2px solid var(--teal-deep, #0B4E58)}
+
+/* the doors: small bar chrome, exit grey (matches the type-exit tile color),
+   full bar-content height, twice as wide as tall. Always live dwell targets —
+   never disabled. Width and glyph size come from doorbar.js so they track the
+   strip. This is the apps' one sanctioned break from the >=90px dwell-target
+   law (dad 9/2: the exit icon can be smaller, and a top corner is the easiest
+   reach on screen); the gates judge bar chrome against the STRIP instead
+   (era-hub tests/invariants.mjs law 1). */
+.bardoor{flex:0 0 auto; border:none; border-radius:12px; padding:0;
+         cursor:pointer; font-family:var(--font, "Segoe UI", system-ui, sans-serif); line-height:1;
+         display:flex; align-items:center; justify-content:center;
+         background:#6B7B82; color:#FFFFFF}
+/* display:flex above is an AUTHOR rule and would beat the UA's [hidden] —
+   without this line setPause(false) would leave the 💬 on screen. */
+.bardoor[hidden]{display:none}
+
+/* 💬 "pause to talk" (dad 9/17): TOP CENTRE, the same size and hold as the 🚪
+   because it has the same consequence — she leaves this screen. Absolutely
+   positioned so it is centred on the BAR, not packed between the door and the
+   partner strip: its position must not move when a board grows a strip.
+   top/height are set inline by sizeBar() from the same --bar-inner as the 🚪. */
+.bardoor.talk{position:absolute; left:50%; transform:translateX(-50%)}
+
+/* ---- dwell onset delay (era-board T2.1) — layered on dwell.js's existing
+   .dwell-fill. dwell.js drives the fill's HEIGHT every frame (its clock is
+   untouched); here we gate only OPACITY so the first ~200ms of a hold shows
+   nothing — a passing glance never flashes fill, and visible feedback fades in
+   at ~200ms. dwell.js adds .dwell-active BEFORE it inserts the fill, so a
+   transition can't fire (no initial render transitions) — we use an ANIMATION,
+   which DOES run on first paint. The fill's HEIGHT still tracks true progress
+   throughout; only its opacity is gated. Selectors are .bardoor-scoped to
+   outrank dwell.js's injected .dwell-fill rules (equal specificity, appended
+   last). NO dwell.js edit. The board keeps the identical .tile half in
+   board.css; these two doors carry it wherever the bar goes. */
+@keyframes dwellOnset{ 0%{opacity:0} 58%{opacity:0} 100%{opacity:.28} }
+.bardoor.dwell-active .dwell-fill{opacity:.28; animation:dwellOnset 340ms linear both}
+.bardoor.dwell-paused .dwell-fill{animation:none; opacity:.14}
+@media (prefers-reduced-motion: reduce){
+  .bardoor.dwell-active .dwell-fill{animation:none}
+}
