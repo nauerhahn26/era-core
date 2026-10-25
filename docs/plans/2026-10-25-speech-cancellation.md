@@ -20,4 +20,7 @@ speech. No live hub was changed and no release was published.
 
 The final Math payload includes this fixed source and passed a production-path
 late-response probe. Later receipt commits change Markdown only. The paired
-feature branches remain unlanded; land core before hub when requested.
+feature landed on the maintainer's request: core `bb998e2`, then hub
+`36795d3`, both pushed to master. The later request is a website coming-soon
+notice, with the public suite release deferred. No device update or live hub
+restart was performed.
