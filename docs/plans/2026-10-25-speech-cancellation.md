@@ -24,3 +24,8 @@ feature landed on the maintainer's request: core `bb998e2`, then hub
 `36795d3`, both pushed to master. The later request is a website coming-soon
 notice, with the public suite release deferred. No device update or live hub
 restart was performed.
+
+The maintainer later requested installed delivery. This fix ships in suite
+v1.0.12 after a fresh 132-suite green gate and eight passing Windows self-update
+tests. The hub's `docs/plans/2026-10-25-math-release.md` records publication
+and the separately tracked installed-device delivery status.
