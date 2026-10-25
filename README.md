@@ -6,7 +6,9 @@ The shared foundation of the **Our Era Communication Tools** eye-gaze app family
   and gentle decay, hysteresis halo, track-loss hold, tap parity (touch works
   everywhere gaze does), page-settle suppression, gaze-bus client.
 - `speech.js` — serialized speech engine (barge-in law: a child's action always
-  interrupts speech), TTS with system-voice fallback.
+  interrupts speech), TTS with system-voice fallback. Cancellation also suppresses
+  clips that finish downloading after a newer action; stale failures cannot
+  restart speech through the fallback voice.
 - `lib/contract.js` (+ generated `contract.json`) — the UX contract: every hold
   time, font floor, and target size in one governed place. Apps never invent
   values.
