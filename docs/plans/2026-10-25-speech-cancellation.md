@@ -1,0 +1,23 @@
+# Speech cancellation regression receipt
+
+Design: [pending clip cancellation](../specs/2026-10-25-speech-cancellation.md).
+Branch: `feat/math`, paired with the hub's math feature.
+
+- [x] Reproduce old number audio starting after stop and replacement speech.
+- [x] Write a self-contained regression against the production playback path.
+  Initial run: two pass, two fail.
+- [x] Guard playback after asynchronous clip completion. Focused run: 4/4 pass.
+- [x] Verify a packed copy uses the fixed source and suppresses cancelled audio.
+- [x] Update nearest documentation and review the change independently.
+- [x] Run the complete hub gate with the matching worktree suffix and record
+  the core and hub green stamps: 132 suites passed, zero failures on
+  2026-10-25; core code `20b94f1`, hub code `7ab4e7a`, neither stamp dirty.
+
+The application generation counter could stop newly queued count words, but
+could not prevent audio creation inside the shared layer. The fix belongs
+at that asynchronous boundary and also protects other callers of shared
+speech. No live hub was changed and no release was published.
+
+The final Math payload includes this fixed source and passed a production-path
+late-response probe. Later receipt commits change Markdown only. The paired
+feature branches remain unlanded; land core before hub when requested.

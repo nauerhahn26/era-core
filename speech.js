@@ -54,8 +54,13 @@
       setTimeout(() => fin(true), Math.min(14000, 1500 + text.length * 95));
     });
   }
-  async function sayEleven(text, kind, muted) {
-    try { return await playClip(await fetchClip(text), text, kind, muted); }
+  async function sayEleven(text, kind, muted, fresh = () => true) {
+    try {
+      const url = await fetchClip(text);
+      // A user action may cancel speech while its clip is downloading.
+      if (!fresh()) return true;
+      return await playClip(url, text, kind, muted);
+    }
     catch { return false; }
   }
   function sayLocal(text, kind) {
@@ -115,7 +120,7 @@
       tlog("end", kind, text);
       return;
     }
-    if (mode === "eleven") { if (await sayEleven(text, kind)) return; }
+    if (mode === "eleven") { if (await sayEleven(text, kind, false, () => myGen === gen)) return; }
     if (myGen !== gen) return;
     await sayLocal(text, kind);
   }
