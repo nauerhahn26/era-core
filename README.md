@@ -15,6 +15,11 @@ The shared foundation of the **Our Era Communication Tools** eye-gaze app family
 - `lib/tokens.css`, `lib/shell.js`, `lib/celebrate.js` — shared visual tokens,
   app shell, celebration effects.
 
+The shared `lib/doorbar.js` Exit callback may return a Promise for a final
+local save. The bar waits at most 1200 ms before asking the hub to close the
+kiosk. Existing synchronous callbacks exit immediately; Talk still opens the
+communication door without a save wait.
+
 These engines are safety-critical for eye-gaze users: apps consume them, never
 fork them. Versioned releases; each Our Era Comms app pins the version it has
 tested against.

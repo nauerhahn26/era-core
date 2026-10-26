@@ -70,7 +70,7 @@ const FIXTURE = `<!doctype html><html><head><meta charset="utf-8">
   window.Dwell = { suppress(ms) { window.__calls.push("suppress:" + ms); } };
   const opts = {
     appPath: "/board/?recipe=songs",
-    onLeave: () => window.__calls.push("leave"),
+    onLeave: () => { window.__calls.push("leave"); return window.__leaveHook?.(); },
     onPause: () => window.__calls.push("pause"),
     onResume: () => window.__calls.push("resume"),
   };
@@ -283,6 +283,64 @@ test("🚪 click: onLeave() then /kiosk/exit; anything but closed goes to the hu
     await page.locator("#barDoor").click();
     await page.waitForURL(/\/home\/?$/, { timeout: 8000 });
     assert.equal(exits, 1);
+  } finally { await ctx.close(); }
+});
+
+test("an optional asynchronous leave waits for acknowledged saving before closing", async () => {
+  const { ctx, page } = await open();
+  try {
+    let exits = 0;
+    await ctx.route("**/kiosk/exit", r => { exits++; r.fulfill({ status: 200, contentType: "application/json", body: '{"action":"closed"}' }); });
+    await page.evaluate(() => {
+      window.__leaveHook = () => new Promise(resolve => { window.__finishLeave = resolve; });
+      document.querySelector("#barDoor").click();
+    });
+    await page.waitForTimeout(100);
+    assert.equal(exits, 0, "the kiosk must stay open while the app is saving");
+    await page.evaluate(() => window.__finishLeave());
+    await page.waitForFunction(() => window.__calls.includes("leave"));
+    await page.waitForTimeout(100);
+    assert.equal(exits, 1);
+  } finally { await ctx.close(); }
+});
+
+test("rejected, thrown and never-settling leave work cannot trap the Exit door", async () => {
+  for (const kind of ["reject", "throw", "hang", "thenable"]) {
+    const { ctx, page } = await open();
+    try {
+      let exits = 0;
+      await ctx.route("**/kiosk/exit", r => { exits++; r.fulfill({ status: 200, contentType: "application/json", body: '{"action":"closed"}' }); });
+      await page.evaluate(kind => {
+        window.__leaveHook = () => {
+          if (kind === "throw") throw Error("save failed");
+          if (kind === "reject") return Promise.reject(Error("save failed"));
+          if (kind === "hang") return new Promise(() => {});
+          return { then(resolve) { resolve(); } };
+        };
+        document.querySelector("#barDoor").click();
+      }, kind);
+      await page.waitForTimeout(kind === "hang" ? 1500 : 100);
+      assert.equal(exits, 1, `${kind} still exits once`);
+    } finally { await ctx.close(); }
+  }
+});
+
+test("Exit re-arms after a completed close response and after a restored page", async () => {
+  const { ctx, page } = await open();
+  try {
+    let exits = 0;
+    await ctx.route("**/kiosk/exit", r => { exits++; r.fulfill({ status: 200, contentType: "application/json", body: '{"action":"closed"}' }); });
+    await page.locator("#barDoor").click();
+    await page.waitForFunction(() => window.__calls.length === 1);
+    await page.waitForTimeout(100);
+    await page.locator("#barDoor").click();
+    await page.waitForFunction(() => window.__calls.length === 2);
+    await page.waitForTimeout(100);
+    assert.equal(exits, 2, "a closed response did not permanently disable the door");
+    await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true })));
+    await page.locator("#barDoor").click();
+    await page.waitForTimeout(100);
+    assert.equal(exits, 3, "a restored page can leave again");
   } finally { await ctx.close(); }
 });
 
