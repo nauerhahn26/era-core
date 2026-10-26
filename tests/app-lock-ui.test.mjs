@@ -102,3 +102,23 @@ test('interrupted transitions wait for an explicit Continue after unlocking', as
     assert.equal(await page.evaluate(() => window.actions), 1);
   } finally { await context.close(); }
 });
+test('a nested partner-strip unlock control stays visible when already locked', async () => {
+  const context = await browser.newContext();
+  try {
+    const page = await context.newPage(); await page.goto(base + '/math/'); await page.waitForFunction(() => window.fixtureReady);
+    await page.evaluate(async () => {
+      const strip = document.createElement('div'); strip.id = 'partnerStrip';
+      document.querySelector('.msgbar').append(strip); strip.append(document.querySelector('#stripLock'));
+      document.querySelector('#stripLock').classList.add('app-lock-in-strip');
+      await window.AppLock.get('math').lock();
+    });
+    assert.equal(await page.locator('#stripLock').isVisible(), true);
+  } finally { await context.close(); }
+});
+test('an absent continuation never adds a hidden gaze target', async () => {
+  const context = await browser.newContext();
+  try {
+    const page = await context.newPage(); await page.goto(base + '/math/'); await page.waitForFunction(() => window.fixtureReady);
+    assert.deepEqual(await page.locator('.dwell').evaluateAll(elements => elements.map(el => el.id).sort()), ['activity', 'barDoor', 'barTalk']);
+  } finally { await context.close(); }
+});

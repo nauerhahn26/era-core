@@ -34,5 +34,5 @@ per-app state (`app-lock-state.js`), with `app-lock.css` for its UI. The shared
 door bar accepts `onLock` and `onUnlock` hooks and exposes its controller as
 `appLock`. Hooks stop activity without clearing an existing partner pause.
 `deferResume(action)` provides an explicit Continue for interrupted transitions;
-unlocking never invokes it automatically. Regression suites are authored and
-await execution; this implementation has not been released.
+unlocking never invokes it automatically. Regression coverage lives in `tests/app-lock-state.test.mjs` and
+`tests/app-lock-ui.test.mjs`; qualification receipts live in the hub plan.
