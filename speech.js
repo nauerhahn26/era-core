@@ -10,6 +10,14 @@
  * to finish — the name+sound pairing is part of her instruction (the literacy method)
  * and must never be cut off or talked over. stop() still kills everything
  * (barge-in: a new user action always silences the old speech).
+ *
+ * READY LAW (10/26, root fix for "the question before the video used the
+ * local voice"): a sentence waits for the voice probe; cap 4 s. init() keeps
+ * its probe promise in `ready`; a sentence whose turn comes while the mode is
+ * still unknown (null) waits for that probe, at most READY_CAP_MS, then picks
+ * its voice by the usual rules. A null mode is unknown, never "off"; only a
+ * known "off" silences. stop() drops the waiting sentence but never cancels
+ * the probe. Letter echoes do not wait; test mode (__testHooks) is immediate.
  */
 (function () {
   "use strict";
@@ -21,7 +29,9 @@
       .push({ t: performance.now(), ev, kind, text: (text || "").slice(0, 40) });
   };
   const clipCache = new Map();          // text -> objectURL (browser side; server caches mp3s too)
-  let mode = null;                      // 'eleven' | 'local' | 'off'
+  let mode = null;                      // 'eleven' | 'local' | 'off' (null = unknown)
+  let ready = null;                     // the latest init() probe (READY LAW)
+  const READY_CAP_MS = 4000;
   let localVoice = null;
   let current = null, currentKind = null;
 
@@ -84,7 +94,11 @@
   // The boot self-test is SILENT: it exercises the full audio path (fetch +
   // playback / utterance start) to pick the mode and drive the ttsWarn banner,
   // but no app announces itself out loud at launch (dad 8/27).
-  async function init(sample) {
+  function init(sample) {
+    ready = probe(sample);              // stored before anything is awaited
+    return ready;
+  }
+  async function probe(sample) {
     if (window.__testHooks) { mode = "test"; return mode; }  // deterministic fake audio
     try {
       const v = await (await fetch("/voices")).json();
@@ -112,8 +126,17 @@
   let letterSeq = 0;               // newest letter echo wins — EVEN while its clip is
                                    // still fetching (a stale echo must never start;
                                    // rapid taps used to queue every echo, dad 7/28)
+  // READY LAW: an unknown mode waits for the probe, capped at READY_CAP_MS.
+  async function awaitReady() {
+    if (mode !== null || !ready) return;
+    let timer;
+    const cap = new Promise(r => { timer = setTimeout(r, READY_CAP_MS); });
+    try { await Promise.race([ready.catch(() => {}), cap]); }
+    finally { clearTimeout(timer); }
+  }
   async function speakNow(text, kind, myGen) {
     if (myGen !== gen) return;     // superseded by a user action — never play stale prompts
+    if (mode === "off") return;    // known off (the probe may have answered while we waited)
     if (mode === "test") {         // fake playback: real timing shape, no audio
       tlog("start", kind, text);
       await new Promise(r => setTimeout(r, 60 + Math.min(240, text.length * 4)));
@@ -150,7 +173,8 @@
     }
     // SERIALIZATION LAW: wait for the chain AND any in-flight letter echo
     // (evaluated at run time, so the freshest echo wins) before speaking.
-    chain = chain.then(() => letterEcho).then(() => speakNow(text, kind, myGen)).catch(() => {});
+    chain = chain.then(() => letterEcho).then(awaitReady)
+      .then(() => speakNow(text, kind, myGen)).catch(() => {});
     return chain;
   }
   // BARGE-IN: the user acted — kill current audio AND everything queued behind it.
