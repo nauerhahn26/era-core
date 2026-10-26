@@ -122,3 +122,20 @@ test('an absent continuation never adds a hidden gaze target', async () => {
     assert.deepEqual(await page.locator('.dwell').evaluateAll(elements => elements.map(el => el.id).sort()), ['activity', 'barDoor', 'barTalk']);
   } finally { await context.close(); }
 });
+test('locking closes a native partner dialog so Exit and Unlock remain reachable', async () => {
+  const context = await browser.newContext();
+  try {
+    const page = await context.newPage(); await page.goto(base + '/chat/'); await page.waitForFunction(() => window.fixtureReady);
+    await page.evaluate(async () => {
+      const dialog = document.createElement('dialog'); dialog.id = 'partnerDialog';
+      const input = document.createElement('input'); input.value = 'Keep this draft'; dialog.append(input);
+      document.body.append(dialog); dialog.showModal();
+      await window.AppLock.get('chat').lock();
+    });
+    assert.equal(await page.locator('#partnerDialog').evaluate(dialog => dialog.open), false);
+    assert.equal(await page.locator('#partnerDialog input').inputValue(), 'Keep this draft');
+    assert.equal(await page.locator('#barDoor').evaluate(door => {
+      const r=door.getBoundingClientRect();return !!document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('#barDoor');
+    }), true);
+  } finally { await context.close(); }
+});
