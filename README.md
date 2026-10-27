@@ -26,3 +26,13 @@ tested against.
 
 Built for Ellie, a six-year-old who communicates by eye gaze; shared so any
 family can use it. License: MPL-2.0 (see LICENSE, NOTICE).
+
+## App locks
+
+`lib/app-lock.js` owns shared adult controls, passcodes, expiry and browser-local
+per-app state (`app-lock-state.js`), with `app-lock.css` for its UI. The shared
+door bar accepts `onLock` and `onUnlock` hooks and exposes its controller as
+`appLock`. Hooks stop activity without clearing an existing partner pause.
+`deferResume(action)` provides an explicit Continue for interrupted transitions;
+unlocking never invokes it automatically. Regression coverage lives in `tests/app-lock-state.test.mjs` and
+`tests/app-lock-ui.test.mjs`; qualification receipts live in the hub plan.

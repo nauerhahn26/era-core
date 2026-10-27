@@ -28,6 +28,7 @@
     (window.__speechEngineLog = window.__speechEngineLog || [])
       .push({ t: performance.now(), ev, kind, text: (text || "").slice(0, 40) });
   };
+  const appLocked = () => window.AppLock?.isLocked() || false;
   const clipCache = new Map();          // text -> objectURL (browser side; server caches mp3s too)
   let mode = null;                      // 'eleven' | 'local' | 'off' (null = unknown)
   let ready = null;                     // the latest init() probe (READY LAW)
@@ -54,6 +55,7 @@
   }
   function playClip(url, text, kind, muted) {
     return new Promise(res => {
+      if (!muted && appLocked()) { res(true); return; }
       const a = new Audio(url);
       if (muted) a.muted = true;
       current = a; currentKind = kind;
@@ -75,7 +77,7 @@
   }
   function sayLocal(text, kind) {
     return new Promise(res => {
-      if (!window.speechSynthesis || !text) return res(true);
+      if (appLocked() || !window.speechSynthesis || !text) return res(true);
       let done = false; const fin = () => { if (!done) { done = true; res(true); } };
       const u = new SpeechSynthesisUtterance(text);
       if (localVoice) u.voice = localVoice;
@@ -135,7 +137,7 @@
     finally { clearTimeout(timer); }
   }
   async function speakNow(text, kind, myGen) {
-    if (myGen !== gen) return;     // superseded by a user action — never play stale prompts
+    if (appLocked() || myGen !== gen) return;     // superseded by a user action — never play stale prompts
     if (mode === "off") return;    // known off (the probe may have answered while we waited)
     if (mode === "test") {         // fake playback: real timing shape, no audio
       tlog("start", kind, text);
@@ -144,10 +146,11 @@
       return;
     }
     if (mode === "eleven") { if (await sayEleven(text, kind, false, () => myGen === gen)) return; }
-    if (myGen !== gen) return;
+    if (appLocked() || myGen !== gen) return;
     await sayLocal(text, kind);
   }
   function say(text, kind) {
+    if (appLocked()) return Promise.resolve();
     kind = kind || "long";
     tlog("say", kind, text);
     if (!text || mode === "off") return Promise.resolve();

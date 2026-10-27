@@ -1,0 +1,36 @@
+/* Adult controls share one appearance across all apps. Doors keep their geometry. */
+.app-lock-control { position:absolute; right:6px; top:4px; bottom:4px; min-width:52px; border:2px solid #707b8c; border-radius:10px; background:#202735; color:white; font-size:24px; touch-action:none; user-select:none; z-index:8; cursor:pointer; }
+.app-lock-control.locked { background:#6b4411; border-color:#ffd16b; }
+.app-lock-control.holding { animation:app-lock-hold var(--hold-ms) linear forwards; }
+@keyframes app-lock-hold { from { box-shadow:inset 0 0 0 0 #f7c55b; } to { box-shadow:inset 0 0 0 8px #f7c55b; } }
+.msgbar > #partnerStrip, .msgbar > #readerStrip { margin-right:64px; }
+.app-lock-curtain { position:fixed; inset:0; z-index:9000; display:flex; align-items:center; justify-content:center; padding:28px; background:#10151bf5; color:#fff; font:600 clamp(20px,3vw,36px)/1.5 system-ui,sans-serif; text-align:center; touch-action:none; }
+.app-lock-curtain[hidden] { display:none; }
+.app-lock-curtain.app-lock-error { inset:auto 12px 12px; font-size:18px; border:2px solid #ffd16b; }
+body[data-app-locked="true"] .msgbar { z-index:9001; }
+body[data-app-locked="true"] .msgbar > :not(:where(#barDoor, #barTalk, .app-lock-control, #partnerStrip)) { visibility:hidden; pointer-events:none; }
+.app-lock-pad { position:fixed; inset:0; z-index:10000; background:#000b; display:flex; align-items:center; justify-content:center; overflow:auto; padding:12px; box-sizing:border-box; }
+.app-lock-card { background:#202735; color:white; padding:16px; border:2px solid #b6c3d5; border-radius:18px; text-align:center; max-height:100%; overflow:auto; font-family:system-ui,sans-serif; }
+.app-lock-card h2 { margin:0 0 10px; font-size:22px; }
+.app-lock-dots { font-size:32px; letter-spacing:12px; margin:10px; }
+.app-lock-grid { display:grid; grid-template-columns:repeat(3,96px); gap:8px; margin-bottom:8px; }
+.app-lock-card button { min-width:96px; min-height:96px; border:1px solid #adb9cc; border-radius:10px; background:#364354; color:white; font-size:26px; cursor:pointer; touch-action:manipulation; }
+
+.app-lock-control.app-lock-in-strip { position:relative; inset:auto; height:100%; }
+.msgbar > #partnerStrip:has(.app-lock-control) { margin-right:0; }
+body[data-app-locked="true"] .msgbar > #partnerStrip:has(.app-lock-control) { visibility:visible; pointer-events:auto; }
+body[data-app-locked="true"] #partnerStrip > :not(.app-lock-control) { visibility:hidden; pointer-events:none; }
+body > #partnerStrip, #app > #partnerStrip { right:80px; }
+.partner-button { margin-right:64px; }
+body:has(#trashTile) .app-lock-control { right:calc(2 * var(--bar-inner, 60px) + 24px); }
+body[data-app-locked="true"] * { animation-play-state:paused !important; }
+body[data-app-locked="true"] .app-lock-pad * { animation-play-state:running !important; }
+.app-lock-curtain.app-lock-error { pointer-events:none; }
+.app-lock-card.shake { animation:app-lock-shake 180ms linear 2; }
+@keyframes app-lock-shake { 25% { transform:translateX(-8px); } 75% { transform:translateX(8px); } }
+
+body[data-app-locked="true"] [data-app-lock-ui] { animation-play-state:running !important; }
+
+.app-lock-resume { position:fixed; inset:var(--bar-h,100px) 0 0; z-index:8999; display:grid; place-items:center; background:#10151bf5; }
+.app-lock-resume[hidden] { display:none; }
+.app-lock-resume button { width:240px; min-height:120px; border:3px solid #fff; border-radius:16px; background:#0b6570; color:#fff; font:600 32px system-ui,sans-serif; }
