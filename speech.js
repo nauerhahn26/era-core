@@ -18,6 +18,15 @@
  * its voice by the usual rules. A null mode is unknown, never "off"; only a
  * known "off" silences. stop() drops the waiting sentence but never cancels
  * the probe. Letter echoes do not wait; test mode (__testHooks) is immediate.
+ * The probe DOWNLOADS its sample and never plays it (10/31): it used to play
+ * the clip muted to the end, and that playback plus a fresh download commonly
+ * outran the 4 s cap, so the question before a video still fell to the local
+ * voice. A clip that arrived proves the voice service; the download lands in
+ * the clip cache, so a question used as the sample plays at once from it.
+ *
+ * Every clip asks for the helper voice (voice: "helper"): this engine speaks
+ * prompts and questions, never her own words, and the hub routes the helper
+ * role to the helper voice.
  */
 (function () {
   "use strict";
@@ -47,7 +56,7 @@
   async function fetchClip(text) {
     if (clipCache.has(text)) return clipCache.get(text);
     const r = await fetch("/tts", { method: "POST",
-      headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
+      headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text, voice: "helper" }) });
     if (!r.ok) throw new Error("tts " + r.status);
     const url = URL.createObjectURL(await r.blob());
     clipCache.set(text, url);
@@ -93,9 +102,9 @@
     try { if (window.speechSynthesis && speechSynthesis.speaking) speechSynthesis.cancel(); } catch {}
   }
 
-  // The boot self-test is SILENT: it exercises the full audio path (fetch +
-  // playback / utterance start) to pick the mode and drive the ttsWarn banner,
-  // but no app announces itself out loud at launch (dad 8/27).
+  // The boot self-test is SILENT: it fetches the sample clip (never plays it)
+  // or starts a volume-0 utterance to pick the mode and drive the ttsWarn
+  // banner; no app announces itself out loud at launch (dad 8/27).
   function init(sample) {
     ready = probe(sample);              // stored before anything is awaited
     return ready;
@@ -104,7 +113,7 @@
     if (window.__testHooks) { mode = "test"; return mode; }  // deterministic fake audio
     try {
       const v = await (await fetch("/voices")).json();
-      if (v.enabled && await sayEleven(sample || "Hello!", "long", true)) { mode = "eleven"; return mode; }
+      if (v.enabled) { await fetchClip(sample || "Hello!"); mode = "eleven"; return mode; }
     } catch {}
     // local self-test: does an utterance actually start? (volume 0 — inaudible)
     const started = await new Promise(res => {
