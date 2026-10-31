@@ -58,7 +58,7 @@ async function speechPage() {
   await page.evaluate(() => Speech.init('Math'));
   assert.equal(await page.evaluate(() => !!window.__testHooks), false, 'production playback path is exercised');
   const boot = await page.evaluate(() => events.filter(e => e.event === 'play'));
-  assert.deepEqual(boot, [{ event: 'play', text: 'clip:Math', muted: true }], 'boot self-test remains silent');
+  assert.deepEqual(boot, [], 'boot never plays');
   await page.evaluate(() => { events.length = 0; window.oldSpeech = Speech.say('seven', 'long'); });
   await page.waitForFunction(() => typeof window.releaseOld === 'function');
   return page;

@@ -1,5 +1,5 @@
 // A sentence waits for the voice probe (2026-10-26). init() picks the voice by an
-// async probe (/voices, then one muted clip); a page that calls init() and say()
+// async probe (/voices, then one clip download that never plays); a page that calls init() and say()
 // in the same tick used to speak before the probe answered and fell to the local
 // voice — the question before a video did it on every cold start. Drives the
 // production path (no __testHooks) with stubbed fetch / Audio / speechSynthesis,
@@ -36,8 +36,8 @@ async function speechPage(voices, { clock = false } = {}) {
         if (voices === 'manual') return new Promise(res => { window.releaseVoices = () => res(answer()); });
         return new Promise(res => setTimeout(() => res(answer()), 300));
       }
-      const text = JSON.parse(options.body).text;
-      events.push({ event: 'fetch', text });
+      const { text, voice } = JSON.parse(options.body);
+      events.push({ event: 'fetch', text, voice });
       return { ok: true, blob: async () => ({ clipText: text }) };
     };
     URL.createObjectURL = blob => 'clip:' + blob.clipText;
@@ -77,10 +77,53 @@ test('a sentence said 10 ms after init() waits for the probe and plays the clip 
     });
     assert.equal(await page.evaluate(() => Speech.mode()), 'eleven');
     assert.deepEqual(await evts(page, ['local']), [], 'the question never falls to the local voice');
-    assert.deepEqual((await evts(page, ['fetch'])).filter(e => e.text === 'Q'), [{ event: 'fetch', text: 'Q' }],
+    assert.deepEqual((await evts(page, ['fetch'])).filter(e => e.text === 'Q'), [{ event: 'fetch', text: 'Q', voice: 'helper' }],
       'one /tts request for the question');
     assert.deepEqual((await evts(page, ['play'])).filter(e => e.text === 'clip:Q'),
       [{ event: 'play', text: 'clip:Q', muted: false }], 'the question plays aloud through the clip voice');
+  } finally { await page.close(); }
+});
+
+test('the probe downloads its sample and never plays it (10/31)', async () => {
+  const page = await speechPage('delay');
+  try {
+    await page.evaluate(() => Speech.init('Boot'));
+    assert.equal(await page.evaluate(() => Speech.mode()), 'eleven');
+    assert.deepEqual(await evts(page, ['play', 'local']), [], 'nothing plays during the probe, muted or not');
+    assert.deepEqual(await evts(page, ['fetch']), [{ event: 'fetch', text: 'Boot', voice: 'helper' }],
+      'the probe is one /tts download of the sample');
+  } finally { await page.close(); }
+});
+
+test('the question as the sample: said 10 ms after init() it plays once, aloud, from one download', async () => {
+  const page = await speechPage('delay');
+  try {
+    await page.evaluate(async () => {
+      window.booted = Speech.init('Q');
+      await new Promise(r => setTimeout(r, 10));
+      await Speech.say('Q');
+      await window.booted;
+    });
+    assert.equal(await page.evaluate(() => Speech.mode()), 'eleven');
+    assert.deepEqual(await evts(page, ['local']), [], 'the question never falls to the local voice');
+    assert.deepEqual(await evts(page, ['fetch']), [{ event: 'fetch', text: 'Q', voice: 'helper' }],
+      'the probe download is the question clip: one /tts request');
+    assert.deepEqual(await evts(page, ['play']), [{ event: 'play', text: 'clip:Q', muted: false }],
+      'the question plays exactly once, aloud');
+  } finally { await page.close(); }
+});
+
+test('every /tts request asks for the helper voice', async () => {
+  const page = await speechPage('delay');
+  try {
+    await page.evaluate(async () => {
+      await Speech.init('Boot');
+      await Speech.say('Q');
+      await Speech.say('R', 'letter');
+    });
+    const fetches = await evts(page, ['fetch']);
+    assert.ok(fetches.length >= 3, 'the probe, the sentence and the letter echo each asked for a clip');
+    assert.deepEqual(fetches.filter(e => e.voice !== 'helper'), [], 'no clip request lacks voice: "helper"');
   } finally { await page.close(); }
 });
 
@@ -126,7 +169,7 @@ test('stop() during the wait drops the sentence and leaves the probe intact', as
     });
     assert.equal(await page.evaluate(() => Speech.mode()), 'eleven', 'the probe finished after stop()');
     assert.deepEqual(await evts(page, ['local']), [], 'no local voice');
-    assert.deepEqual((await evts(page, ['play'])).map(e => e.text), ['clip:Boot', 'clip:R'],
-      'the stopped sentence never plays; the next one plays through the clip voice');
+    assert.deepEqual((await evts(page, ['play'])).map(e => e.text), ['clip:R'],
+      'the probe plays nothing; the stopped sentence never plays; the next one plays through the clip voice');
   } finally { await page.close(); }
 });
