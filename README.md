@@ -36,3 +36,6 @@ door bar accepts `onLock` and `onUnlock` hooks and exposes its controller as
 `deferResume(action)` provides an explicit Continue for interrupted transitions;
 unlocking never invokes it automatically. Regression coverage lives in `tests/app-lock-state.test.mjs` and
 `tests/app-lock-ui.test.mjs`; qualification receipts live in the hub plan.
+
+Speech Mirror (`/slp-videos/`) has an independent shared app lock. Its Hub
+player releases camera and microphone tracks when the lock activates.

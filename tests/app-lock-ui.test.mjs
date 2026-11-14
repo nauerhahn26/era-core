@@ -38,8 +38,8 @@ async function hold(page, duration = 1700, pointerType = 'touch') {
   await page.waitForTimeout(duration);
   await button.dispatchEvent('pointerup', { pointerType, pointerId: 1 });
 }
-test('all eleven app routes get an independent shared control and keep both doors', async () => {
-  for (const route of ['/', '/pencil/', '/board/', '/board/?recipe=songs', '/board/?recipe=movies', '/board/?recipe=this-week', '/reader/', '/drawing/', '/math/', '/games/', '/chat/']) {
+test('all twelve app routes get an independent shared control and keep both doors', async () => {
+  for (const route of ['/', '/pencil/', '/board/', '/board/?recipe=songs', '/board/?recipe=movies', '/board/?recipe=this-week', '/reader/', '/drawing/', '/math/', '/games/', '/chat/', '/slp-videos/']) {
     const context = await browser.newContext({ hasTouch: true });
     try {
       const page = await context.newPage(); await page.goto(base + route); await page.waitForFunction(() => window.fixtureReady);

@@ -11,12 +11,12 @@ function memory() {
   const data = new Map();
   return { getItem: k => data.get(k) ?? null, setItem: (k, v) => data.set(k, String(v)), removeItem: k => data.delete(k) };
 }
-test('eleven independent app identities include child routes', () => {
-  assert.equal(APP_LOCKS.length, 11);
+test('twelve independent app identities include child routes', () => {
+  assert.equal(APP_LOCKS.length, 12);
   for (const [url, id] of [['/', 'making-words'], ['/pencil/', 'pencil'], ['/%70encil/index.html', 'pencil'], ['/board/?recipe=%21', 'board'], ['/board/', 'board'],
     ['/board/?recipe=songs&board=one', 'music'], ['/board/?recipe=movies', 'movies'],
     ['/board/?recipe=this-week', 'this-week'], ['/play/?w=week', 'this-week'], ['/watch/?id=one', 'this-week'],
-    ['/reader/#book=one', 'reader'], ['/drawing/', 'drawing'], ['/math/', 'math'], ['/games/', 'games'], ['/chat/', 'chat']])
+    ['/reader/#book=one', 'reader'], ['/drawing/', 'drawing'], ['/math/', 'math'], ['/games/', 'games'], ['/chat/', 'chat'], ['/slp-videos/', 'slp-videos']])
     assert.equal(appIdForURL(new URL(url, 'http://localhost')), id, url);
   assert.equal(appIdForURL(new URL('http://localhost/settings/')), null);
   assert.equal(appIdForURL(new URL('http://localhost/board/?recipe=unknown')), null);
